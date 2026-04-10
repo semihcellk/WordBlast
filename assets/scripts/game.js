@@ -2,6 +2,7 @@ let score = 0;
 let lives = 3;
 const correctWord = "BLAST";
 const maxLives = 3;
+let gameOver = false;
 
 document.addEventListener("DOMContentLoaded", () => {
     // Allows pressing Enter to submit
@@ -42,6 +43,8 @@ function updateScoreAnimated(newScore) {
 }
 
 function submitGuess() {
+    if (gameOver) return;
+
     const predictionInput = document.getElementById("prediction");
     let userGuess = predictionInput.value.toUpperCase().trim();
     const boxes = document.querySelectorAll(".box");
@@ -77,6 +80,8 @@ function submitGuess() {
     }
 
     // Handle single letter guess
+    let alreadyGuessed = false;
+
     boxes.forEach((box) => {
         const letter = box.getAttribute("data-letter");
         if (letter === userGuess) {
@@ -84,8 +89,7 @@ function submitGuess() {
                 revealLetter(box, letter);
                 correctGuess = true;
             } else {
-                // Already guessed, technically not wrong but we may just let it pass
-                correctGuess = true; 
+                alreadyGuessed = true;
             }
         }
     });
@@ -93,6 +97,8 @@ function submitGuess() {
     if (correctGuess) {
         score += 20;
         updateScoreAnimated(score);
+    } else if (alreadyGuessed) {
+        setTimeout(() => alert("You already guessed that letter!"), 10);
     } else {
         lives--;
         renderLives();
@@ -123,11 +129,13 @@ function checkWinCondition(boxes) {
     );
 
     if (allBoxesFilled) {
+        gameOver = true;
         setTimeout(() => alert("Congratulations! You won with a score of " + score), 500);
         return;
     }
 
     if (lives <= 0) {
+        gameOver = true;
         setTimeout(() => alert("Game Over! You Lost! Your score: " + score), 500);
         return;
     }
@@ -143,6 +151,7 @@ function resetGame() {
     
     score = 0;
     lives = maxLives;
+    gameOver = false;
     updateScoreAnimated(score);
     renderLives();
     document.querySelector(".reset-button").style.display = "none";

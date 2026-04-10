@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Prediction Game | BLAST</title>
+    <!-- CSS imports -->
+    <link rel="stylesheet" href="assets/styles/style.css">
+    
+    <!-- Optional description and keywords -->
+    <meta name="description" content="A premium word prediction game built with vanilla technologies. Guess the secret word.">
+</head>
+<body>
+    <div class="bg-layer">
+        <div class="bg-shape bg-shape-1"></div>
+        <div class="bg-shape bg-shape-2"></div>
+    </div>
+
+    <div class="container">
+        <h1>Word Prediction</h1>
+        <p class="subtitle">Can you decode the hidden word?</p>
+        
+        <div class="boxes">
+            <div class="box" data-letter="B"></div>
+            <div class="box" data-letter="L"></div>
+            <div class="box" data-letter="A"></div>
+            <div class="box" data-letter="S"></div>
+            <div class="box" data-letter="T"></div>
+        </div>
+
+        <div class="controls">
+            <div class="prediction-area">
+                <input type="text" id="prediction" class="prediction-input" placeholder="Enter a word or letter" autocomplete="off" maxlength="5">
+            </div>
+            
+            <button class="submit-button" onclick="submitGuess()">Submit Guess</button>
+            <button class="reset-button" onclick="resetGame()">Play Again</button>
+        </div>
+
+        <div class="stats">
+            <div class="score-container">
+                <span class="stat-label">Score</span>
+                <span class="score">0</span>
+            </div>
+            <div class="lives-container">
+                <span class="stat-label">Lives</span>
+                <span class="lives"></span>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/scripts/game.js"></script>
+</body>
+</html>

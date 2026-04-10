@@ -1,6 +1,6 @@
 # WordBlast 🚀
 
-> **Academics Note:** _This project was developed for the **BBF 101E - Introduction to Information Systems** course at **Istanbul Technical University (ITU)**._
+> **Academics Note:** _This project was developed for the **BBF 101E - Introduction to Information Systems** course at **Istanbul Technical University (ITU)** in 2024._
 
 WordBlast is a premium, interactive word prediction puzzle game built with HTML, CSS, and Vanilla JavaScript. Decode the hidden word before you run out of lives!
 

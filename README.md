@@ -1,5 +1,7 @@
 # WordBlast 🚀
 
+> **Academics Note:** _This project was developed for the **BBF 101E - Introduction to Information Systems** course at **Istanbul Technical University (ITU)**._
+
 WordBlast is a premium, interactive word prediction puzzle game built with HTML, CSS, and Vanilla JavaScript. Decode the hidden word before you run out of lives!
 
 ## 🌟 Features
@@ -38,9 +40,11 @@ WordBlast is a premium, interactive word prediction puzzle game built with HTML,
 ## 🚀 Running Locally
 
 There is no complex build process required! Since the application relies entirely on frontend technologies:
+
 1. Clone the repository.
 2. Open `index.html` in any modern web browser.
 3. Enjoy the game!
 
 ---
-*Created as a lightweight, aesthetically pleasing vanilla web project.*
+
+_Created as a lightweight, aesthetically pleasing vanilla web project._

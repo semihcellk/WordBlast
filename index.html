@@ -3,12 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word Prediction Game | BLAST</title>
-    <!-- CSS imports -->
+    <title>WordBlast — Word Prediction Game</title>
     <link rel="stylesheet" href="assets/styles/style.css">
-    
-    <!-- Optional description and keywords -->
-    <meta name="description" content="A premium word prediction game built with vanilla technologies. Guess the secret word.">
+    <meta name="description" content="A premium word prediction puzzle game. Guess the secret 5-letter word before you run out of lives!">
 </head>
 <body>
     <div class="bg-layer">
@@ -16,39 +13,120 @@
         <div class="bg-shape bg-shape-2"></div>
     </div>
 
+    <canvas id="confetti-canvas"></canvas>
+
     <div class="container">
-        <h1>Word Prediction</h1>
-        <p class="subtitle">Can you decode the hidden word?</p>
-        
-        <div class="boxes">
-            <div class="box" data-letter="B"></div>
-            <div class="box" data-letter="L"></div>
-            <div class="box" data-letter="A"></div>
-            <div class="box" data-letter="S"></div>
-            <div class="box" data-letter="T"></div>
+        <div class="header-area">
+            <button class="stats-toggle-btn" id="stats-toggle-btn" title="View Statistics">📊</button>
+            <h1>WordBlast</h1>
+            <p class="subtitle">Can you decode the hidden word?</p>
         </div>
 
+        <!-- Timer Toggle -->
+        <div class="timer-section">
+            <span class="timer-label">⏱️ Timer</span>
+            <label class="toggle-switch">
+                <input type="checkbox" id="timer-toggle">
+                <span class="toggle-slider"></span>
+            </label>
+            <span class="timer-display hidden" id="timer-display">60</span>
+        </div>
+
+        <!-- Letter Boxes (generated dynamically by JS) -->
+        <div class="boxes" id="boxes-container"></div>
+
+        <!-- Controls -->
         <div class="controls">
             <div class="prediction-area">
                 <input type="text" id="prediction" class="prediction-input" placeholder="Enter a word or letter" autocomplete="off" maxlength="5">
             </div>
-            
-            <button class="submit-button" onclick="submitGuess()">Submit Guess</button>
-            <button class="reset-button" onclick="resetGame()">Play Again</button>
+
+            <div class="button-row">
+                <button class="submit-button" id="submit-btn">Submit Guess</button>
+                <button class="hint-button" id="hint-btn">💡 Hint</button>
+            </div>
+            <button class="reset-button" id="reset-btn">Play Again</button>
         </div>
 
+        <!-- Visual Keyboard -->
+        <div class="keyboard" id="keyboard">
+            <div class="keyboard-row">
+                <button class="key" data-key="Q">Q</button>
+                <button class="key" data-key="W">W</button>
+                <button class="key" data-key="E">E</button>
+                <button class="key" data-key="R">R</button>
+                <button class="key" data-key="T">T</button>
+                <button class="key" data-key="Y">Y</button>
+                <button class="key" data-key="U">U</button>
+                <button class="key" data-key="I">I</button>
+                <button class="key" data-key="O">O</button>
+                <button class="key" data-key="P">P</button>
+            </div>
+            <div class="keyboard-row">
+                <button class="key" data-key="A">A</button>
+                <button class="key" data-key="S">S</button>
+                <button class="key" data-key="D">D</button>
+                <button class="key" data-key="F">F</button>
+                <button class="key" data-key="G">G</button>
+                <button class="key" data-key="H">H</button>
+                <button class="key" data-key="J">J</button>
+                <button class="key" data-key="K">K</button>
+                <button class="key" data-key="L">L</button>
+            </div>
+            <div class="keyboard-row">
+                <button class="key" data-key="Z">Z</button>
+                <button class="key" data-key="X">X</button>
+                <button class="key" data-key="C">C</button>
+                <button class="key" data-key="V">V</button>
+                <button class="key" data-key="B">B</button>
+                <button class="key" data-key="N">N</button>
+                <button class="key" data-key="M">M</button>
+            </div>
+        </div>
+
+        <!-- Score & Lives -->
         <div class="stats">
             <div class="score-container">
                 <span class="stat-label">Score</span>
-                <span class="score">0</span>
+                <span class="score" id="score-display">0</span>
             </div>
             <div class="lives-container">
                 <span class="stat-label">Lives</span>
-                <span class="lives"></span>
+                <span class="lives" id="lives-display"></span>
             </div>
         </div>
     </div>
+
+    <!-- Stats Modal -->
+    <div class="stats-modal-overlay" id="stats-modal-overlay">
+        <div class="stats-modal">
+            <h2>📊 Your Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-played">0</div>
+                    <div class="stat-name">Played</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-winrate">0%</div>
+                    <div class="stat-name">Win Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-best">0</div>
+                    <div class="stat-name">Best Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-streak">0</div>
+                    <div class="stat-name">Win Streak</div>
+                </div>
+            </div>
+            <button class="close-modal-btn" id="close-modal-btn">Close</button>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
     <div id="toast-container" class="toast-container"></div>
+
+    <script src="assets/scripts/words.js"></script>
     <script src="assets/scripts/game.js"></script>
 </body>
 </html>

@@ -9,6 +9,7 @@
     --primary-hover: #7c3aed;
     --accent-color: #10b981;
     --danger-color: #ef4444;
+    --hint-color: #f59e0b;
     --box-bg: rgba(15, 23, 42, 0.6);
     --box-shadow-color: rgba(139, 92, 246, 0.2);
 }
@@ -27,12 +28,12 @@ body {
     min-height: 100vh;
     background: linear-gradient(135deg, var(--bg-color), #1e1b4b);
     color: var(--text-color);
-    overflow: hidden;
+    overflow-x: hidden;
 }
 
-/* Background floating elements (optional micro-animation elements) */
+/* Background floating elements */
 .bg-layer {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
@@ -72,25 +73,55 @@ body {
     animation-delay: -5s;
 }
 
+/* ==================== CONTAINER ==================== */
 .container {
     position: relative;
     z-index: 10;
     text-align: center;
     background: var(--card-bg);
-    padding: 3rem 2rem;
+    padding: 2.5rem 2rem 2rem;
     border-radius: 20px;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--border-color);
     width: 90%;
-    max-width: 600px;
+    max-width: 620px;
     animation: fadeIn 0.8s ease-out;
+    margin: 20px auto;
 }
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* Header area */
+.header-area {
+    position: relative;
+}
+
+.stats-toggle-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    font-size: 1.2rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stats-toggle-btn:hover {
+    background: rgba(255,255,255,0.1);
+    transform: scale(1.05);
 }
 
 h1 {
@@ -108,21 +139,106 @@ h1 {
 .subtitle {
     font-size: 1rem;
     color: #94a3b8;
-    margin-bottom: 2.5rem;
+    margin-bottom: 1.5rem;
     font-weight: 300;
 }
 
+/* ==================== TIMER TOGGLE ==================== */
+.timer-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.timer-label {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 48px;
+    height: 26px;
+    cursor: pointer;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.1);
+    border-radius: 26px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    background: #94a3b8;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: rgba(139, 92, 246, 0.3);
+    border-color: var(--primary-color);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(22px);
+    background: var(--primary-color);
+}
+
+.timer-display {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--accent-color);
+    min-width: 45px;
+    transition: color 0.3s ease;
+}
+
+.timer-display.urgent {
+    color: var(--danger-color);
+    animation: pulse 0.8s infinite;
+}
+
+.timer-display.hidden {
+    display: none;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* ==================== LETTER BOXES ==================== */
 .boxes {
     display: flex;
     justify-content: center;
-    gap: 15px;
-    margin-bottom: 2rem;
+    gap: 12px;
+    margin-bottom: 1.5rem;
     perspective: 1000px;
+    flex-wrap: wrap;
 }
 
 .box {
-    width: 75px;
-    height: 75px;
+    width: 65px;
+    height: 65px;
     background: var(--box-bg);
     border: 2px solid var(--border-color);
     border-radius: 12px;
@@ -137,10 +253,13 @@ h1 {
     box-shadow: 0 4px 6px rgba(0,0,0,0.3) inset;
 }
 
-.box img {
-    width: 60px;
-    height: 60px;
-    object-fit: contain;
+.box .letter {
+    font-size: 1.8rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #a855f7, #6366f1);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
     animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -157,6 +276,28 @@ h1 {
     transform: translateY(-5px);
 }
 
+.box.hint-revealed {
+    background: rgba(245, 158, 11, 0.08);
+    border-color: var(--hint-color);
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
+    transform: translateY(-5px);
+}
+
+.box.hint-revealed .letter {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.box.game-over-reveal .letter {
+    background: linear-gradient(135deg, #64748b, #94a3b8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    opacity: 0.5;
+}
+
 /* Animations for error state */
 .box.error-shake {
     animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
@@ -170,12 +311,13 @@ h1 {
     40%, 60% { transform: translateX(4px); }
 }
 
+/* ==================== CONTROLS ==================== */
 .controls {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .prediction-area {
@@ -212,12 +354,19 @@ h1 {
     text-transform: none;
 }
 
+.button-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
 .submit-button {
     background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
     color: white;
     border: none;
     padding: 12px 24px;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
     border-radius: 20px;
@@ -225,6 +374,7 @@ h1 {
     transition: all 0.2s ease;
     text-transform: uppercase;
     letter-spacing: 1px;
+    font-family: 'Outfit', sans-serif;
 }
 
 .submit-button:hover {
@@ -234,6 +384,37 @@ h1 {
 
 .submit-button:active {
     transform: translateY(0);
+}
+
+.hint-button {
+    background: linear-gradient(135deg, var(--hint-color), #d97706);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'Outfit', sans-serif;
+}
+
+.hint-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3);
+}
+
+.hint-button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.hint-button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    filter: grayscale(60%);
 }
 
 .reset-button {
@@ -254,15 +435,72 @@ h1 {
     color: white;
 }
 
+/* ==================== VISUAL KEYBOARD ==================== */
+.keyboard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 1.5rem;
+}
+
+.keyboard-row {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+}
+
+.key {
+    width: 36px;
+    height: 42px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: rgba(15, 23, 42, 0.6);
+    color: var(--text-color);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+}
+
+.key:hover:not(.correct):not(.wrong) {
+    transform: translateY(-2px);
+    background: rgba(139, 92, 246, 0.15);
+    border-color: var(--primary-color);
+}
+
+.key:active {
+    transform: translateY(0);
+}
+
+.key.correct {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
+}
+
+.key.wrong {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #64748b;
+    opacity: 0.5;
+}
+
+/* ==================== STATS BAR ==================== */
 .stats {
     display: flex;
     justify-content: space-around;
     align-items: center;
     background: rgba(0,0,0,0.2);
-    padding: 15px 30px;
+    padding: 12px 20px;
     border-radius: 15px;
     border: 1px solid var(--border-color);
-    margin-top: 2rem;
 }
 
 .score-container, .lives-container {
@@ -272,22 +510,22 @@ h1 {
 }
 
 .stat-label {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: #94a3b8;
     text-transform: uppercase;
     letter-spacing: 1px;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
 }
 
 .score {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     font-weight: 800;
     color: var(--accent-color);
     transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .lives {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     letter-spacing: 2px;
 }
 
@@ -302,14 +540,102 @@ h1 {
     transform: scale(0.8);
 }
 
-@media (max-width: 500px) {
-    .boxes { gap: 8px; }
-    .box { width: 55px; height: 55px; }
-    .box img { width: 40px; height: 40px; }
-    h1 { font-size: 2rem; }
+/* ==================== STATS MODAL ==================== */
+.stats-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
 }
 
-/* Toast Notifications */
+.stats-modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.stats-modal {
+    background: rgba(30, 41, 59, 0.95);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 2rem;
+    width: 90%;
+    max-width: 380px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    transform: scale(0.9) translateY(20px);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.stats-modal-overlay.show .stats-modal {
+    transform: scale(1) translateY(0);
+}
+
+.stats-modal h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(to right, #a855f7, #3b82f6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 14px 10px;
+    text-align: center;
+}
+
+.stat-card .stat-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--accent-color);
+}
+
+.stat-card .stat-name {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+}
+
+.close-modal-btn {
+    background: transparent;
+    color: #cbd5e1;
+    border: 1px solid var(--border-color);
+    padding: 10px 24px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-radius: 30px;
+    transition: all 0.2s ease;
+    font-family: 'Outfit', sans-serif;
+}
+
+.close-modal-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: white;
+}
+
+/* ==================== TOAST NOTIFICATIONS ==================== */
 .toast-container {
     position: fixed;
     top: 20px;
@@ -352,4 +678,29 @@ h1 {
 .toast.toast-success {
     border-color: var(--accent-color);
     box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+}
+
+/* ==================== CONFETTI CANVAS ==================== */
+#confetti-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 9998;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 500px) {
+    .container {
+        padding: 1.5rem 1rem 1rem;
+    }
+    .boxes { gap: 8px; }
+    .box { width: 50px; height: 50px; }
+    .box .letter { font-size: 1.4rem; }
+    h1 { font-size: 1.8rem; }
+    .key { width: 30px; height: 38px; font-size: 0.75rem; }
+    .keyboard-row { gap: 3px; }
+    .stats-grid { gap: 8px; }
 }

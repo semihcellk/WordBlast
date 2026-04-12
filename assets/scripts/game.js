@@ -1,26 +1,125 @@
+/**
+ * WordBlast — Game Engine
+ * Dynamic word guessing game with hints, timer, stats, keyboard, and confetti.
+ */
+
+// ==================== STATE ====================
 let score = 0;
 let lives = 3;
-const correctWord = "BLAST";
 const maxLives = 3;
 let gameOver = false;
+let correctWord = "";
 let guessedAttempts = new Set();
+let hintUsed = false;
+let timerMode = false;
+let timerSeconds = 60;
+let timerInterval = null;
+let firstGuessMade = false;
 
+// ==================== DOM REFERENCES ====================
+const boxesContainer = document.getElementById("boxes-container");
+const predictionInput = document.getElementById("prediction");
+const submitBtn = document.getElementById("submit-btn");
+const hintBtn = document.getElementById("hint-btn");
+const resetBtn = document.getElementById("reset-btn");
+const scoreDisplay = document.getElementById("score-display");
+const livesDisplay = document.getElementById("lives-display");
+const timerToggle = document.getElementById("timer-toggle");
+const timerDisplay = document.getElementById("timer-display");
+const statsToggleBtn = document.getElementById("stats-toggle-btn");
+const statsModalOverlay = document.getElementById("stats-modal-overlay");
+const closeModalBtn = document.getElementById("close-modal-btn");
+const confettiCanvas = document.getElementById("confetti-canvas");
+const confettiCtx = confettiCanvas.getContext("2d");
+
+// ==================== INIT ====================
 document.addEventListener("DOMContentLoaded", () => {
-    // Allows pressing Enter to submit
-    const predictionInput = document.getElementById("prediction");
-    predictionInput.addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            event.preventDefault();
+    initGame();
+
+    // Enter key to submit
+    predictionInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
             submitGuess();
         }
     });
 
-    renderLives();
+    // Button listeners
+    submitBtn.addEventListener("click", submitGuess);
+    hintBtn.addEventListener("click", useHint);
+    resetBtn.addEventListener("click", resetGame);
+
+    // Timer toggle
+    timerToggle.addEventListener("change", () => {
+        timerMode = timerToggle.checked;
+        if (timerMode) {
+            timerDisplay.classList.remove("hidden");
+            // If game is already in progress and first guess was made, start timer
+            if (firstGuessMade && !gameOver) {
+                startTimer();
+            }
+        } else {
+            timerDisplay.classList.add("hidden");
+            stopTimer();
+        }
+    });
+
+    // Stats modal
+    statsToggleBtn.addEventListener("click", openStatsModal);
+    closeModalBtn.addEventListener("click", closeStatsModal);
+    statsModalOverlay.addEventListener("click", (e) => {
+        if (e.target === statsModalOverlay) closeStatsModal();
+    });
+
+    // Physical keyboard → visual keyboard
+    document.addEventListener("keydown", (e) => {
+        const letter = e.key.toUpperCase();
+        if (/^[A-Z]$/.test(letter)) {
+            const keyEl = document.querySelector(`.key[data-key="${letter}"]`);
+            if (keyEl) {
+                keyEl.style.transform = "translateY(1px)";
+                setTimeout(() => { keyEl.style.transform = ""; }, 100);
+            }
+        }
+    });
+
+    // Visual keyboard clicks
+    document.getElementById("keyboard").addEventListener("click", (e) => {
+        if (e.target.classList.contains("key")) {
+            const letter = e.target.dataset.key;
+            predictionInput.value = letter;
+            submitGuess();
+        }
+    });
+
+    // Resize confetti canvas
+    resizeConfettiCanvas();
+    window.addEventListener("resize", resizeConfettiCanvas);
 });
 
+function initGame() {
+    correctWord = WORD_POOL[Math.floor(Math.random() * WORD_POOL.length)];
+    generateBoxes();
+    renderLives();
+    updateScoreDisplay(0);
+    predictionInput.focus();
+}
+
+function generateBoxes() {
+    boxesContainer.innerHTML = "";
+    for (let i = 0; i < correctWord.length; i++) {
+        const box = document.createElement("div");
+        box.className = "box";
+        box.dataset.letter = correctWord[i];
+        box.dataset.index = i;
+        boxesContainer.appendChild(box);
+    }
+}
+
+// ==================== TOAST SYSTEM ====================
 function showToast(message, type = "info") {
     const container = document.getElementById("toast-container");
-    
+
     // Spam Protection: Prevent identical messages from stacking
     if (container.lastChild && container.lastChild.innerText === message) {
         const existingToast = container.lastChild;
@@ -33,7 +132,7 @@ function showToast(message, type = "info") {
         return;
     }
 
-    // Clean UI: Keep maximum of 2 toasts on the screen at a time
+    // Clean UI: Keep maximum of 2 toasts on screen
     if (container.children.length >= 2) {
         container.removeChild(container.firstChild);
     }
@@ -41,16 +140,13 @@ function showToast(message, type = "info") {
     const toast = document.createElement("div");
     toast.className = `toast toast-${type}`;
     toast.innerText = message;
-    
+
     container.appendChild(toast);
-    
-    // Trigger reflow for animation
     void toast.offsetWidth;
     toast.classList.add("show");
-    
+
     setTimeout(() => {
         toast.classList.remove("show");
-        // Remove from DOM after fade out transition (300ms)
         setTimeout(() => {
             if (container.contains(toast)) {
                 container.removeChild(toast);
@@ -59,45 +155,47 @@ function showToast(message, type = "info") {
     }, 3000);
 }
 
+// ==================== LIVES ====================
 function renderLives() {
-    const livesContainer = document.querySelector(".lives");
-    livesContainer.innerHTML = '';
-    
+    livesDisplay.innerHTML = "";
     for (let i = 0; i < maxLives; i++) {
         const heartSpan = document.createElement("span");
         heartSpan.className = "heart " + (i >= lives ? "lost" : "");
         heartSpan.innerText = "❤️";
         heartSpan.style.marginRight = "5px";
-        livesContainer.appendChild(heartSpan);
+        livesDisplay.appendChild(heartSpan);
     }
 }
 
-function updateScoreAnimated(newScore) {
-    const scoreElem = document.querySelector(".score");
-    scoreElem.textContent = newScore;
-    scoreElem.style.transform = "scale(1.2)";
-    scoreElem.style.color = "#fff";
-    
+// ==================== SCORE ====================
+function updateScoreDisplay(newScore) {
+    scoreDisplay.textContent = newScore;
+    scoreDisplay.style.transform = "scale(1.2)";
+    scoreDisplay.style.color = "#fff";
     setTimeout(() => {
-        scoreElem.style.transform = "scale(1)";
-        scoreElem.style.color = "var(--accent-color)";
+        scoreDisplay.style.transform = "scale(1)";
+        scoreDisplay.style.color = "var(--accent-color)";
     }, 300);
 }
 
+// ==================== SUBMIT GUESS ====================
 function submitGuess() {
     if (gameOver) {
-        showToast("The game is already over. Please start a new game!", "error");
+        showToast("The game is already over. Press Play Again!", "error");
         return;
     }
 
-    const predictionInput = document.getElementById("prediction");
     let userGuess = predictionInput.value.toUpperCase().trim();
     const boxes = document.querySelectorAll(".box");
-    
-    // Validate input empty
+
     if (!userGuess) return;
 
-    // Check if the user already tried this exact string
+    if (userGuess.length > 1 && userGuess.length !== correctWord.length) {
+        showToast(`Please enter either 1 letter or a ${correctWord.length}-letter word!`, "error");
+        return;
+    }
+
+    // Duplicate guess protection
     if (guessedAttempts.has(userGuess)) {
         showToast("You already guessed that!", "error");
         predictionInput.value = "";
@@ -106,23 +204,31 @@ function submitGuess() {
     guessedAttempts.add(userGuess);
 
     predictionInput.value = "";
-    document.querySelector(".reset-button").style.display = "block";
+    resetBtn.style.display = "block";
+
+    // Start timer on first guess if timer mode is ON
+    if (!firstGuessMade) {
+        firstGuessMade = true;
+        if (timerMode) startTimer();
+    }
+
     let correctGuess = false;
 
     // Handle full word guess
     if (userGuess.length > 1) {
         if (userGuess === correctWord) {
             boxes.forEach((box, index) => {
-                revealLetter(box, correctWord[index]);
+                revealLetter(box, correctWord[index], "guessed");
             });
             score += 100;
-            updateScoreAnimated(score);
+            updateScoreDisplay(score);
+            updateKeyboardColors();
         } else {
             lives--;
             renderLives();
             shakeBoxes(boxes);
             if (lives > 0) {
-                 showToast(`Incorrect word! ${lives} lives remaining.`, "error");
+                showToast(`Incorrect word! ${lives} lives remaining.`, "error");
             }
         }
         checkWinCondition(boxes);
@@ -133,8 +239,8 @@ function submitGuess() {
     boxes.forEach((box) => {
         const letter = box.getAttribute("data-letter");
         if (letter === userGuess) {
-            if (!box.classList.contains("guessed")) {
-                revealLetter(box, letter);
+            if (!box.classList.contains("guessed") && !box.classList.contains("hint-revealed")) {
+                revealLetter(box, letter, "guessed");
                 correctGuess = true;
             }
         }
@@ -142,69 +248,296 @@ function submitGuess() {
 
     if (correctGuess) {
         score += 20;
-        updateScoreAnimated(score);
+        updateScoreDisplay(score);
+        updateKeyboardKey(userGuess, "correct");
     } else {
         lives--;
         renderLives();
         shakeBoxes(boxes);
+        updateKeyboardKey(userGuess, "wrong");
     }
 
     checkWinCondition(boxes);
 }
 
-function revealLetter(box, letter) {
-    box.classList.add("guessed");
-    // Ensure we are pulling from the correct reorganized assets location
-    box.innerHTML = `<img src="assets/images/${letter}.svg" alt="${letter}">`;
+function revealLetter(box, letter, className) {
+    box.classList.add(className);
+    box.innerHTML = `<span class="letter">${letter}</span>`;
 }
 
 function shakeBoxes(boxes) {
     boxes.forEach(box => {
         box.classList.remove("error-shake");
-        // Trigger reflow
         void box.offsetWidth;
         box.classList.add("error-shake");
     });
 }
 
+// ==================== WIN / LOSE ====================
 function checkWinCondition(boxes) {
     const allBoxesFilled = Array.from(boxes).every((box) =>
-        box.classList.contains("guessed")
+        box.classList.contains("guessed") || box.classList.contains("hint-revealed")
     );
 
     if (allBoxesFilled) {
         gameOver = true;
-        setTimeout(() => showToast(`Congratulations! You won! Your final score is ${score}`, "success"), 500);
+        stopTimer();
+        saveStats(true);
+        setTimeout(() => {
+            showToast(`🎉 You won! Final score: ${score}`, "success");
+            launchConfetti();
+        }, 400);
         return;
     }
 
     if (lives <= 0) {
         gameOver = true;
-        // Visual enhancement: reveal the letters half-transparent to show what the word was 
+        stopTimer();
+        saveStats(false);
+        // Reveal remaining letters as greyed out
         boxes.forEach((box, index) => {
-            if (!box.classList.contains("guessed")) {
-                box.innerHTML = `<img src="assets/images/${correctWord[index]}.svg" alt="${correctWord[index]}" style="opacity: 0.5; filter: grayscale(100%);">`;
+            if (!box.classList.contains("guessed") && !box.classList.contains("hint-revealed")) {
+                box.classList.add("game-over-reveal");
+                box.innerHTML = `<span class="letter">${correctWord[index]}</span>`;
             }
         });
-        setTimeout(() => showToast(`Game Over! The word was ${correctWord}. Your score: ${score}`, "error"), 500);
+        setTimeout(() => showToast(`Game Over! The word was ${correctWord}. Score: ${score}`, "error"), 400);
         return;
     }
 }
 
-function resetGame() {
+// ==================== HINT SYSTEM ====================
+function useHint() {
+    if (gameOver) {
+        showToast("The game is already over!", "error");
+        return;
+    }
+    if (hintUsed) {
+        showToast("You already used your hint!", "error");
+        return;
+    }
+
     const boxes = document.querySelectorAll(".box");
-    boxes.forEach((box) => {
-        box.classList.remove("guessed");
-        box.classList.remove("error-shake");
-        box.innerHTML = "";
+    const unrevealedBoxes = Array.from(boxes).filter(
+        (box) => !box.classList.contains("guessed") && !box.classList.contains("hint-revealed")
+    );
+
+    if (unrevealedBoxes.length === 0) return;
+
+    // Pick a random unrevealed box
+    const randomBox = unrevealedBoxes[Math.floor(Math.random() * unrevealedBoxes.length)];
+    const letter = randomBox.getAttribute("data-letter");
+
+    revealLetter(randomBox, letter, "hint-revealed");
+    updateKeyboardKey(letter, "correct");
+
+    // Deduct points
+    score -= 10;
+    updateScoreDisplay(score);
+
+    hintUsed = true;
+    hintBtn.disabled = true;
+
+    showToast("Hint used! -10 points", "info");
+
+    // Start timer on hint if timer mode is on and first action
+    if (!firstGuessMade) {
+        firstGuessMade = true;
+        if (timerMode) startTimer();
+    }
+
+    checkWinCondition(document.querySelectorAll(".box"));
+}
+
+// ==================== KEYBOARD ====================
+function updateKeyboardKey(letter, status) {
+    const keyEl = document.querySelector(`.key[data-key="${letter}"]`);
+    if (keyEl) {
+        keyEl.classList.remove("correct", "wrong");
+        keyEl.classList.add(status);
+    }
+}
+
+function updateKeyboardColors() {
+    // When a full word is guessed correctly, mark all letters
+    for (const letter of correctWord) {
+        updateKeyboardKey(letter, "correct");
+    }
+}
+
+function resetKeyboard() {
+    document.querySelectorAll(".key").forEach((key) => {
+        key.classList.remove("correct", "wrong");
     });
-    
+}
+
+// ==================== TIMER ====================
+function startTimer() {
+    if (timerInterval) return;
+    timerSeconds = 60;
+    timerDisplay.textContent = timerSeconds;
+    timerDisplay.classList.remove("urgent");
+
+    timerInterval = setInterval(() => {
+        timerSeconds--;
+        timerDisplay.textContent = timerSeconds;
+
+        if (timerSeconds <= 10) {
+            timerDisplay.classList.add("urgent");
+        }
+
+        if (timerSeconds <= 0) {
+            stopTimer();
+            gameOver = true;
+            saveStats(false);
+
+            // Reveal remaining letters
+            const boxes = document.querySelectorAll(".box");
+            boxes.forEach((box, index) => {
+                if (!box.classList.contains("guessed") && !box.classList.contains("hint-revealed")) {
+                    box.classList.add("game-over-reveal");
+                    box.innerHTML = `<span class="letter">${correctWord[index]}</span>`;
+                }
+            });
+
+            showToast(`⏱️ Time's up! The word was ${correctWord}.`, "error");
+        }
+    }, 1000);
+}
+
+function stopTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+}
+
+// ==================== STATISTICS (localStorage) ====================
+function getStats() {
+    const raw = localStorage.getItem("wordblast_stats");
+    if (raw) return JSON.parse(raw);
+    return { gamesPlayed: 0, gamesWon: 0, bestScore: 0, currentStreak: 0, bestStreak: 0 };
+}
+
+function saveStats(won) {
+    const stats = getStats();
+    stats.gamesPlayed++;
+    if (won) {
+        stats.gamesWon++;
+        stats.currentStreak++;
+        if (stats.currentStreak > stats.bestStreak) {
+            stats.bestStreak = stats.currentStreak;
+        }
+        if (score > stats.bestScore) {
+            stats.bestScore = score;
+        }
+    } else {
+        stats.currentStreak = 0;
+    }
+    localStorage.setItem("wordblast_stats", JSON.stringify(stats));
+}
+
+function openStatsModal() {
+    const stats = getStats();
+    document.getElementById("stat-played").textContent = stats.gamesPlayed;
+    const winRate = stats.gamesPlayed > 0
+        ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100)
+        : 0;
+    document.getElementById("stat-winrate").textContent = winRate + "%";
+    document.getElementById("stat-best").textContent = stats.bestScore;
+    document.getElementById("stat-streak").textContent = stats.currentStreak;
+    statsModalOverlay.classList.add("show");
+}
+
+function closeStatsModal() {
+    statsModalOverlay.classList.remove("show");
+}
+
+// ==================== CONFETTI ====================
+function resizeConfettiCanvas() {
+    confettiCanvas.width = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+}
+
+function launchConfetti() {
+    const particles = [];
+    const colors = ["#a855f7", "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#ec4899", "#6366f1"];
+
+    for (let i = 0; i < 150; i++) {
+        particles.push({
+            x: confettiCanvas.width / 2 + (Math.random() - 0.5) * 200,
+            y: confettiCanvas.height / 2,
+            vx: (Math.random() - 0.5) * 16,
+            vy: (Math.random() - 1) * 18 - 4,
+            w: Math.random() * 10 + 5,
+            h: Math.random() * 6 + 3,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rotation: Math.random() * 360,
+            rotationSpeed: (Math.random() - 0.5) * 12,
+            alpha: 1,
+        });
+    }
+
+    let frame = 0;
+    const maxFrames = 180;
+
+    function animate() {
+        if (frame >= maxFrames) {
+            confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            return;
+        }
+
+        confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+
+        particles.forEach((p) => {
+            p.x += p.vx;
+            p.vy += 0.35; // gravity
+            p.y += p.vy;
+            p.rotation += p.rotationSpeed;
+            p.alpha = Math.max(0, 1 - frame / maxFrames);
+
+            confettiCtx.save();
+            confettiCtx.translate(p.x, p.y);
+            confettiCtx.rotate((p.rotation * Math.PI) / 180);
+            confettiCtx.globalAlpha = p.alpha;
+            confettiCtx.fillStyle = p.color;
+            confettiCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+            confettiCtx.restore();
+        });
+
+        frame++;
+        requestAnimationFrame(animate);
+    }
+
+    animate();
+}
+
+// ==================== RESET ====================
+function resetGame() {
+    stopTimer();
     score = 0;
     lives = maxLives;
     gameOver = false;
+    hintUsed = false;
+    firstGuessMade = false;
     guessedAttempts.clear();
-    updateScoreAnimated(score);
+
+    // Pick a new word
+    correctWord = WORD_POOL[Math.floor(Math.random() * WORD_POOL.length)];
+    generateBoxes();
+
+    updateScoreDisplay(score);
     renderLives();
-    document.querySelector(".reset-button").style.display = "none";
-    document.getElementById("prediction").focus();
+    resetKeyboard();
+
+    hintBtn.disabled = false;
+    resetBtn.style.display = "none";
+
+    // Reset timer display
+    timerSeconds = 60;
+    timerDisplay.textContent = timerSeconds;
+    timerDisplay.classList.remove("urgent");
+
+    predictionInput.value = "";
+    predictionInput.focus();
 }

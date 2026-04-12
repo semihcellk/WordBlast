@@ -3,6 +3,7 @@ let lives = 3;
 const correctWord = "BLAST";
 const maxLives = 3;
 let gameOver = false;
+let guessedAttempts = new Set();
 
 document.addEventListener("DOMContentLoaded", () => {
     // Allows pressing Enter to submit
@@ -52,6 +53,14 @@ function submitGuess() {
     // Validate input empty
     if (!userGuess) return;
 
+    // Check if the user already tried this exact string
+    if (guessedAttempts.has(userGuess)) {
+        setTimeout(() => alert("You already guessed that!"), 10);
+        predictionInput.value = "";
+        return;
+    }
+    guessedAttempts.add(userGuess);
+
     predictionInput.value = "";
     document.querySelector(".reset-button").style.display = "block";
     let correctGuess = false;
@@ -64,15 +73,12 @@ function submitGuess() {
             });
             score += 100;
             updateScoreAnimated(score);
-            setTimeout(() => alert("Masterful! You guessed the entire word. You won!"), 500);
         } else {
             lives--;
             renderLives();
             shakeBoxes(boxes);
-            if(lives <= 0) {
-                 setTimeout(() => alert("Game Over! The word was BLAST. Your score: " + score), 500);
-            } else {
-                 setTimeout(() => alert("Incorrect word! " + lives + " lives remaining."), 10);
+            if (lives > 0) {
+                 setTimeout(() => alert(`Incorrect word! ${lives} lives remaining.`), 10);
             }
         }
         checkWinCondition(boxes);
@@ -80,16 +86,12 @@ function submitGuess() {
     }
 
     // Handle single letter guess
-    let alreadyGuessed = false;
-
     boxes.forEach((box) => {
         const letter = box.getAttribute("data-letter");
         if (letter === userGuess) {
             if (!box.classList.contains("guessed")) {
                 revealLetter(box, letter);
                 correctGuess = true;
-            } else {
-                alreadyGuessed = true;
             }
         }
     });
@@ -97,8 +99,6 @@ function submitGuess() {
     if (correctGuess) {
         score += 20;
         updateScoreAnimated(score);
-    } else if (alreadyGuessed) {
-        setTimeout(() => alert("You already guessed that letter!"), 10);
     } else {
         lives--;
         renderLives();
@@ -130,13 +130,19 @@ function checkWinCondition(boxes) {
 
     if (allBoxesFilled) {
         gameOver = true;
-        setTimeout(() => alert("Congratulations! You won with a score of " + score), 500);
+        setTimeout(() => alert(`Congratulations! You won! Your final score is ${score}`), 500);
         return;
     }
 
     if (lives <= 0) {
         gameOver = true;
-        setTimeout(() => alert("Game Over! You Lost! Your score: " + score), 500);
+        // Visual enhancement: reveal the letters half-transparent to show what the word was 
+        boxes.forEach((box, index) => {
+            if (!box.classList.contains("guessed")) {
+                box.innerHTML = `<img src="assets/images/${correctWord[index]}.svg" alt="${correctWord[index]}" style="opacity: 0.5; filter: grayscale(100%);">`;
+            }
+        });
+        setTimeout(() => alert(`Game Over! The word was ${correctWord}. Your score: ${score}`), 500);
         return;
     }
 }
@@ -152,6 +158,7 @@ function resetGame() {
     score = 0;
     lives = maxLives;
     gameOver = false;
+    guessedAttempts.clear();
     updateScoreAnimated(score);
     renderLives();
     document.querySelector(".reset-button").style.display = "none";

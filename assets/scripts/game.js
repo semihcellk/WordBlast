@@ -1,5 +1,5 @@
 /**
- * WordBlast — Game Engine
+ * WordFlare — Game Engine
  * Dynamic word guessing game with hints, timer, stats, keyboard, and confetti.
  */
 
@@ -414,7 +414,7 @@ function stopTimer() {
 
 // ==================== STATISTICS (localStorage) ====================
 function getStats() {
-    const raw = localStorage.getItem("wordblast_stats");
+    const raw = localStorage.getItem("wordflare_stats");
     if (raw) return JSON.parse(raw);
     return { gamesPlayed: 0, gamesWon: 0, bestScore: 0, currentStreak: 0, bestStreak: 0 };
 }
@@ -434,7 +434,7 @@ function saveStats(won) {
     } else {
         stats.currentStreak = 0;
     }
-    localStorage.setItem("wordblast_stats", JSON.stringify(stats));
+    localStorage.setItem("wordflare_stats", JSON.stringify(stats));
 }
 
 function openStatsModal() {

@@ -1,8 +1,8 @@
-# WordBlast 🚀
+# WordFlare 🚀
 
 > **Academics Note:** _This project was developed for the **BBF 101E - Introduction to Information Systems** course at **Istanbul Technical University (ITU)** in 2024._
 
-WordBlast is a premium, interactive word prediction puzzle game built entirely from scratch with HTML, CSS, and Vanilla JavaScript. Challenge yourself to guess the hidden 5-letter word against the clock, with an elegant UI tailored for an immersive gaming experience!
+WordFlare is a premium, interactive word prediction puzzle game built entirely from scratch with HTML, CSS, and Vanilla JavaScript. Challenge yourself to guess the hidden 5-letter word against the clock, with an elegant UI tailored for an immersive gaming experience!
 
 ## 🌟 Key Features
 

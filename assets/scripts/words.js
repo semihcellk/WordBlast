@@ -1,5 +1,5 @@
 /**
- * WordBlast — 5-Letter Word Pool
+ * WordFlare — 5-Letter Word Pool
  * A curated collection of common English words used for the game.
  */
 const WORD_POOL = [

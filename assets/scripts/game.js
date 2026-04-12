@@ -18,6 +18,47 @@ document.addEventListener("DOMContentLoaded", () => {
     renderLives();
 });
 
+function showToast(message, type = "info") {
+    const container = document.getElementById("toast-container");
+    
+    // Spam Protection: Prevent identical messages from stacking
+    if (container.lastChild && container.lastChild.innerText === message) {
+        const existingToast = container.lastChild;
+        existingToast.style.transform = "translateY(0) scale(1.05)";
+        setTimeout(() => {
+            if (existingToast.classList.contains("show")) {
+                existingToast.style.transform = "translateY(0) scale(1)";
+            }
+        }, 150);
+        return;
+    }
+
+    // Clean UI: Keep maximum of 2 toasts on the screen at a time
+    if (container.children.length >= 2) {
+        container.removeChild(container.firstChild);
+    }
+
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${type}`;
+    toast.innerText = message;
+    
+    container.appendChild(toast);
+    
+    // Trigger reflow for animation
+    void toast.offsetWidth;
+    toast.classList.add("show");
+    
+    setTimeout(() => {
+        toast.classList.remove("show");
+        // Remove from DOM after fade out transition (300ms)
+        setTimeout(() => {
+            if (container.contains(toast)) {
+                container.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
+}
+
 function renderLives() {
     const livesContainer = document.querySelector(".lives");
     livesContainer.innerHTML = '';
@@ -44,7 +85,10 @@ function updateScoreAnimated(newScore) {
 }
 
 function submitGuess() {
-    if (gameOver) return;
+    if (gameOver) {
+        showToast("The game is already over. Please start a new game!", "error");
+        return;
+    }
 
     const predictionInput = document.getElementById("prediction");
     let userGuess = predictionInput.value.toUpperCase().trim();
@@ -55,7 +99,7 @@ function submitGuess() {
 
     // Check if the user already tried this exact string
     if (guessedAttempts.has(userGuess)) {
-        setTimeout(() => alert("You already guessed that!"), 10);
+        showToast("You already guessed that!", "error");
         predictionInput.value = "";
         return;
     }
@@ -78,7 +122,7 @@ function submitGuess() {
             renderLives();
             shakeBoxes(boxes);
             if (lives > 0) {
-                 setTimeout(() => alert(`Incorrect word! ${lives} lives remaining.`), 10);
+                 showToast(`Incorrect word! ${lives} lives remaining.`, "error");
             }
         }
         checkWinCondition(boxes);
@@ -130,7 +174,7 @@ function checkWinCondition(boxes) {
 
     if (allBoxesFilled) {
         gameOver = true;
-        setTimeout(() => alert(`Congratulations! You won! Your final score is ${score}`), 500);
+        setTimeout(() => showToast(`Congratulations! You won! Your final score is ${score}`, "success"), 500);
         return;
     }
 
@@ -142,7 +186,7 @@ function checkWinCondition(boxes) {
                 box.innerHTML = `<img src="assets/images/${correctWord[index]}.svg" alt="${correctWord[index]}" style="opacity: 0.5; filter: grayscale(100%);">`;
             }
         });
-        setTimeout(() => alert(`Game Over! The word was ${correctWord}. Your score: ${score}`), 500);
+        setTimeout(() => showToast(`Game Over! The word was ${correctWord}. Your score: ${score}`, "error"), 500);
         return;
     }
 }
